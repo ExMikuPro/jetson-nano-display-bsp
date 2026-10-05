@@ -1,0 +1,154 @@
+/dts-v1/;
+/plugin/;
+
+/*
+ * Jetson Nano 2GB (P3448-0003 + P3542-0000), J6 header wiring:
+ *
+ * ST7789V: MOSI=19, SCLK=23, CS0=24, DC=15, RESET=18
+ * FT6336U: SDA=3, SCL=5, INT=29, RESET=31
+ *
+ * GPIO IDs are taken from NVIDIA's board header
+ * tegra210-p3448-0003-p3542-0000.h:
+ *   pin 15 = TEGRA_GPIO(Y,2) = 194
+ *   pin 18 = TEGRA_GPIO(B,7) = 15
+ *   pin 29 = TEGRA_GPIO(S,5) = 149
+ *   pin 31 = TEGRA_GPIO(Z,0) = 200
+ */
+
+/ {
+	compatible = "nvidia,p3542-0000+p3448-0003";
+	overlay-name = "ST7789V framebuffer and FT6336U touchscreen";
+
+	fragment@0 {
+		target = <&pinmux>;
+		__overlay__ {
+			spi_lcd_pinmux: st7789-spi-pinmux {
+				pin19 {
+					nvidia,pins = "spi1_mosi_pc0";
+					nvidia,function = "spi1";
+					nvidia,pull = <1>;
+					nvidia,tristate = <0>;
+					nvidia,enable-input = <1>;
+				};
+				pin21 {
+					nvidia,pins = "spi1_miso_pc1";
+					nvidia,function = "spi1";
+					nvidia,pull = <1>;
+					nvidia,tristate = <0>;
+					nvidia,enable-input = <1>;
+				};
+				pin23 {
+					nvidia,pins = "spi1_sck_pc2";
+					nvidia,function = "spi1";
+					nvidia,pull = <1>;
+					nvidia,tristate = <0>;
+					nvidia,enable-input = <1>;
+				};
+				pin24 {
+					nvidia,pins = "spi1_cs0_pc3";
+					nvidia,function = "spi1";
+					nvidia,pull = <2>;
+					nvidia,tristate = <0>;
+					nvidia,enable-input = <1>;
+				};
+				pin26 {
+					nvidia,pins = "spi1_cs1_pc4";
+					nvidia,function = "spi1";
+					nvidia,pull = <2>;
+					nvidia,tristate = <0>;
+					nvidia,enable-input = <1>;
+				};
+			};
+
+			lcd_gpio_pinmux: st7789-control-pinmux {
+				dc-pin15 {
+					nvidia,pins = "lcd_te_py2";
+					nvidia,function = "rsvd1";
+					nvidia,pull = <0>;
+					nvidia,tristate = <0>;
+					nvidia,enable-input = <0>;
+				};
+				reset-pin18 {
+					nvidia,pins = "spi2_cs0_pb7";
+					nvidia,function = "rsvd2";
+					nvidia,pull = <2>;
+					nvidia,tristate = <0>;
+					nvidia,enable-input = <0>;
+				};
+			};
+
+			touch_gpio_pinmux: ft6336-control-pinmux {
+				int-pin29 {
+					nvidia,pins = "cam_af_en_ps5";
+					nvidia,function = "rsvd2";
+					nvidia,pull = <2>;
+					nvidia,tristate = <1>;
+					nvidia,enable-input = <1>;
+				};
+				reset-pin31 {
+					nvidia,pins = "pz0";
+					nvidia,function = "rsvd1";
+					nvidia,pull = <2>;
+					nvidia,tristate = <0>;
+					nvidia,enable-input = <0>;
+				};
+			};
+		};
+	};
+
+	/* Disable NVIDIA's generic CS0 spidev placeholder. */
+	fragment@1 {
+		target-path = "/spi@7000d400/spi@0";
+		__overlay__ {
+			status = "disabled";
+		};
+	};
+
+	fragment@2 {
+		target = <&hdr40_spi1>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+			pinctrl-names = "default";
+			pinctrl-0 = <&spi_lcd_pinmux>;
+
+			st7789v@0 {
+				compatible = "sitronix,st7789v";
+				reg = <0>;
+				spi-max-frequency = <24000000>;
+				buswidth = <8>;
+				rotate = <90>;
+				fps = <20>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&lcd_gpio_pinmux>;
+				dc-gpios = <&gpio 194 0>;
+				reset-gpios = <&gpio 15 1>;
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <&hdr40_i2c1>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+
+			ft6336u@38 {
+				/* The NVIDIA 4.9 EDT driver exposes the compatible FT6236 path. */
+				compatible = "focaltech,ft6236";
+				reg = <0x38>;
+				interrupt-parent = <&gpio>;
+				interrupts = <149 2>;
+				reset-gpios = <&gpio 200 1>;
+				pinctrl-names = "default";
+				pinctrl-0 = <&touch_gpio_pinmux>;
+				touchscreen-size-x = <240>;
+				touchscreen-size-y = <320>;
+				status = "okay";
+			};
+		};
+	};
+};

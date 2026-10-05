@@ -1,0 +1,19 @@
+# Downloaded/extracted vendor sources and build outputs
+kernel/public_sources_*.tbz2
+kernel/nvidia-src/
+kernel/build-st7789/
+kernel/build-st7789.log
+kernel/build-st7789.pid
+kernel/dtc-1.6.1/
+
+# Generated Device Tree binaries and decompilations
+device-tree/*.dtb
+device-tree/*.dtbo
+device-tree/*.decompiled.dts
+device-tree/merged-verified.dts
+device-tree/*warnings.log
+device-tree/core
+
+# Temporary transfer staging
+scripts-upload/
+scripts/fb-test

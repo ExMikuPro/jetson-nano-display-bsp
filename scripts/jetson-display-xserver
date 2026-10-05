@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+XORG=/usr/lib/xorg/Xorg
+HDMI_STATE=/sys/class/switch/hdmi/state
+SPI_CONFIG=/etc/X11/xorg-st7789.conf
+
+if [ -r "$HDMI_STATE" ] && [ "$(cat "$HDMI_STATE")" = "1" ]; then
+	exec "$XORG" "$@"
+fi
+
+# The framebuffer module may be loaded asynchronously by udev.
+i=0
+while [ ! -e /dev/fb1 ] && [ "$i" -lt 100 ]; do
+	sleep 0.1
+	i=$((i + 1))
+done
+
+exec "$XORG" -config "$SPI_CONFIG" "$@"
+
