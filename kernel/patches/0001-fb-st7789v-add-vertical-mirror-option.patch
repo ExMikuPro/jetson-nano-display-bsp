@@ -1,0 +1,38 @@
+From: Jetson screen bring-up <local@jetson>
+Subject: [PATCH] staging: fbtft: st7789v: add mirror options
+
+Add mirror_x and mirror_y module parameters for panels whose physical mounting
+requires reflection without changing framebuffer dimensions or rotation.
+Account for MADCTL_MV exchanging the controller axes in landscape modes.
+
+---
+ drivers/staging/fbtft/fb_st7789v.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/drivers/staging/fbtft/fb_st7789v.c b/drivers/staging/fbtft/fb_st7789v.c
+--- a/drivers/staging/fbtft/fb_st7789v.c
++++ b/drivers/staging/fbtft/fb_st7789v.c
+@@
+ #define MADCTL_MY BIT(7) /* bitmask for page address order */
++
++static bool mirror_x;
++module_param(mirror_x, bool, 0444);
++MODULE_PARM_DESC(mirror_x, "mirror the framebuffer horizontally");
++
++static bool mirror_y;
++module_param(mirror_y, bool, 0444);
++MODULE_PARM_DESC(mirror_y, "mirror the framebuffer vertically");
+@@
+ 	default:
+ 		return -EINVAL;
+ 	}
++
++	/* MADCTL_MV exchanges the controller axes in landscape modes. */
++	if (mirror_x)
++		madctl_par ^= (madctl_par & MADCTL_MV) ? MADCTL_MY : MADCTL_MX;
++	if (mirror_y)
++		madctl_par ^= (madctl_par & MADCTL_MV) ? MADCTL_MX : MADCTL_MY;
++
+ 	write_reg(par, MIPI_DCS_SET_ADDRESS_MODE, madctl_par);
+-- 
+2.39.5
