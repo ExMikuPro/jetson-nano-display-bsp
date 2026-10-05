@@ -117,7 +117,7 @@
 				compatible = "sitronix,st7789v";
 				reg = <0>;
 				/* Conservative bring-up rate; raise after signal validation. */
-				spi-max-frequency = <4000000>;
+				spi-max-frequency = <12000000>;
 				buswidth = <8>;
 				rotate = <90>;
 				fps = <20>;
