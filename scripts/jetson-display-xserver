@@ -2,12 +2,16 @@
 set -eu
 
 XORG=/usr/lib/xorg/Xorg
-HDMI_STATE=/sys/class/switch/hdmi/state
+HDMI_CHECK=/usr/local/sbin/jetson-hdmi-connected
 SPI_CONFIG=/etc/X11/xorg-st7789.conf
+SPI_CONFIG_DIR=/etc/X11/xorg-st7789.conf.d
 
-if [ -r "$HDMI_STATE" ] && [ "$(cat "$HDMI_STATE")" = "1" ]; then
+if "$HDMI_CHECK"; then
+	logger -t jetson-display-xserver "HDMI connected; using NVIDIA Xorg"
 	exec "$XORG" "$@"
 fi
+
+logger -t jetson-display-xserver "HDMI disconnected; using ST7789V fbdev"
 
 # The framebuffer module may be loaded asynchronously by udev.
 i=0
@@ -16,5 +20,9 @@ while [ ! -e /dev/fb1 ] && [ "$i" -lt 100 ]; do
 	i=$((i + 1))
 done
 
-exec "$XORG" -config "$SPI_CONFIG" "$@"
+if [ ! -e /dev/fb1 ]; then
+	echo "ST7789V framebuffer /dev/fb1 did not appear" >&2
+	exit 1
+fi
 
+exec "$XORG" -config "$SPI_CONFIG" -configdir "$SPI_CONFIG_DIR" "$@"

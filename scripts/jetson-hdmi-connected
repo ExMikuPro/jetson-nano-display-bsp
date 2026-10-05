@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# NVIDIA's L4T 4.9 display stack does not expose a DRM connector on Nano,
+# but it does expose both a legacy switch and a display extcon.
+SWITCH_STATE=/sys/devices/virtual/switch/hdmi/state
+EXTCON_STATE=/sys/devices/extcon/extcon:disp-state/extcon/extcon1/state
+
+if [ -r "$SWITCH_STATE" ]; then
+	[ "$(cat "$SWITCH_STATE")" = "1" ]
+	exit $?
+fi
+
+if [ -r "$EXTCON_STATE" ]; then
+	grep -qx 'HDMI=1' "$EXTCON_STATE"
+	exit $?
+fi
+
+exit 1

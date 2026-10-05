@@ -1,0 +1,31 @@
+#!/bin/sh
+set -eu
+
+CHECK=/usr/local/sbin/jetson-hdmi-connected
+
+display_state()
+{
+	if "$CHECK"; then
+		echo hdmi
+	else
+		echo spi
+	fi
+}
+
+last=$(display_state)
+logger -t jetson-display-monitor "initial display state: $last"
+
+while sleep 1; do
+	current=$(display_state)
+	[ "$current" = "$last" ] && continue
+
+	# Debounce HPD before replacing the graphical session.
+	sleep 2
+	confirmed=$(display_state)
+	[ "$confirmed" = "$current" ] || continue
+
+	last=$confirmed
+	logger -t jetson-display-monitor \
+		"display state changed to $last; restarting LightDM"
+	systemctl restart lightdm.service
+done

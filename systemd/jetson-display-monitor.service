@@ -1,0 +1,13 @@
+[Unit]
+Description=Switch LightDM between HDMI and ST7789V
+After=display-manager.service
+Wants=display-manager.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/jetson-display-monitor
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=graphical.target
