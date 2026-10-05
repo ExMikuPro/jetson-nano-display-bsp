@@ -124,7 +124,8 @@
 				pinctrl-names = "default";
 				pinctrl-0 = <&lcd_gpio_pinmux>;
 				dc-gpios = <&gpio 194 0>;
-				reset-gpios = <&gpio 15 1>;
+				/* FBTFT 4.9 drives this legacy GPIO as raw 0 then raw 1. */
+				reset-gpios = <&gpio 15 0>;
 				status = "okay";
 			};
 		};
