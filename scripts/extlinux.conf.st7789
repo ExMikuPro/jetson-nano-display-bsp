@@ -1,0 +1,18 @@
+TIMEOUT 50
+DEFAULT st7789
+
+MENU TITLE L4T boot options
+
+LABEL st7789
+      MENU LABEL ST7789V + FT6336U kernel
+      LINUX /boot/Image-4.9.253-tegra-st7789
+      INITRD /boot/initrd.img-4.9.253-tegra-st7789
+      FDT /boot/dtb/kernel_tegra210-p3448-0003-p3542-0000-st7789-ft6336.dtb
+      APPEND ${cbootargs} quiet root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0
+
+LABEL rescue
+      MENU LABEL Original NVIDIA kernel and bootloader DTB
+      LINUX /boot/Image
+      INITRD /boot/initrd
+      APPEND ${cbootargs} quiet root=/dev/mmcblk0p1 rw rootwait rootfstype=ext4 console=ttyS0,115200n8 console=tty0 fbcon=map:0 net.ifnames=0
+
